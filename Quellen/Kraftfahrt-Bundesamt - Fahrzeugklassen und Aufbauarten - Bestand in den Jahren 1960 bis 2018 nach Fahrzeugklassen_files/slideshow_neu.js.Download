@@ -1,0 +1,454 @@
+/*!
+ * Slideshow
+ * Author: @jkuschel
+ * Further changes:
+ * Licensed under the MIT license
+ * Important Notice: This slideshow is for modern browsers ONLY a.k.a it will NOT work in IE > 9
+ * */
+;( function($) {"use strict";
+    if (!$.materna) {
+      $.materna = {};
+    }
+    $.materna.Slideshow = function(el, options) {
+      var slideshow = {}, slideTemplate;
+      slideshow.$el = $(el);
+      slideshow.el = el;
+      slideshow.slides = {};
+      slideshow.createdSlides = {};
+      slideshow.$el.data("materna.Slideshow", slideshow);
+
+
+//###########################
+//PRELOAD
+//###########################   
+      slideshow._preloadSlides = function() {
+        $.getJSON(slideshow.options.jsonUrl, function(data) {
+          slideshow.slides = data;
+          slideshow.slides.length = Object.keys(slideshow.slides).length;
+          slideshow._createSlides();
+          slideshow._buildNavigation();
+          if (slideshow.options.pagination === true) {
+            slideshow._buildPagination();
+          }
+        });
+      };
+//###########################
+//CREATE-SLIDES
+//###########################   
+      slideshow._createSlides = function() {
+        var slide, newSlide, containerHeight = slideTemplate.outerHeight();
+        slideshow.$el.css('height',containerHeight);
+        $.each(slideshow.slides, function(index, val) {
+          if (index > 0) {
+            slide = val;            
+            newSlide = slideTemplate.clone(true);
+            newSlide.find('img').attr('src', '').end()
+            .find('.karussell-header a').attr('href',slide.link).text(slide.title).end()
+            .find('.more-link a').attr('href',slide.link).end().find('.aural').text(slide.title).end()
+            .find('.teaser').text(slide.teaser).end().css('left', slideTemplate.outerWidth()).appendTo(slideshow.$el);
+            slideshow.createdSlides[index] = newSlide;
+            slideshow.createdSlides.length = Object.keys(slideshow.createdSlides).length;
+          }
+        });
+      };
+//###########################
+//ADJUST-SLIDE-POSITION
+//###########################   
+      slideshow._adjustSlidePositions = function() {        
+        $.each(slideshow.createdSlides, function(index) {
+          if(index >= 0){
+            var thisWidth = $(this).outerWidth(),
+            oldWidth = slideshow.createdSlides[slideshow.currentSlideIndex].outerWidth(),
+            newPos = thisWidth >= oldWidth ? thisWidth : oldWidth;  
+            if (index < slideshow.currentSlideIndex) {
+              $(this).css('left', newPos);
+            } else if (index > slideshow.currentSlideIndex) {
+              $(this).css('left', newPos);
+            }            
+          }   
+        });
+      };
+//###########################
+//SHOW-SLIDE
+//###########################   
+      slideshow.showSlide = function(index, direction) {
+        var oldSlide, newSlide, oldIndex = index, i = 0;
+        if (slideshow.currentSlideIndex !== index) {
+          oldIndex = slideshow.currentSlideIndex;
+        } 
+        if (direction === 'next') {
+  //----DIRECTION NEXT 
+           oldSlide = slideshow.createdSlides[oldIndex];
+           if (index + 1 !== slideshow.createdSlides.length) {
+             // NICHT LETZTE
+             newSlide = slideshow.createdSlides[index + 1];
+             if ($(newSlide).find('img').attr('src') === '') {
+               $(newSlide).find('img').attr('src', slideshow.slides[index + 1].image);
+             }
+           } else {
+             // LETZTE
+              newSlide = slideshow.createdSlides[0];
+              slideshow.currentSlideIndex = 0;
+              if ($(newSlide).find('img').attr('src') === '') {
+                $(newSlide).find('img').attr('src', slideshow.slides[0].image);
+              }
+          };
+            oldSlide.animate({left : -(oldSlide.outerWidth())}, slideshow.options.slideSpeed);
+            newSlide.animate({left : 0}, slideshow.options.slideSpeed, slideshow._adjustSlidePositions());
+            slideshow.currentSlideIndex = index + 1;
+        } else {
+   //----DIRECTION PREV
+             oldSlide = slideshow.createdSlides[oldIndex];
+             if (index !== 0) {
+               // NICHT ERSTE
+               newSlide = slideshow.createdSlides[index - 1];
+               if ($(newSlide).find('img').attr('src') === '') {
+                   $(newSlide).find('img').attr('src', slideshow.slides[index - 1].image);
+               }
+             }else {
+               // ERSTE
+               newSlide = slideshow.createdSlides[slideshow.createdSlides.length - 1];
+               slideshow.currentSlideIndex = slideshow.createdSlides.length - 1;
+               if ($(newSlide).find('img').attr('src') === '') {
+                    $(newSlide).find('img').attr('src', slideshow.slides[slideshow.createdSlides.length - 1].image);
+               }
+            };
+              oldSlide.animate({left : oldSlide.outerWidth()}, slideshow.options.slideSpeed);
+              newSlide.animate({left : 0 }, slideshow.options.slideSpeed, slideshow._adjustSlidePositions());
+              slideshow.currentSlideIndex = index - 1;
+          };
+        if (slideshow.options.pagination === true) {
+          $.each(slideshow.buttons, function() {
+            this.classList.remove('active');
+          });
+          slideshow.buttons[slideshow.currentSlideIndex].classList.add('active');
+        }        
+      };
+//###########################
+//BUILD-NAVIGATION
+//###########################   
+      slideshow._buildNavigation = function() {
+        var navContainer = document.createElement('div'), nextButton = slideshow.el.querySelectorAll(slideshow.options.nextButton), prevButton = slideshow.el.querySelectorAll(slideshow.options.prevButton);
+        navContainer.className = 'navigation';
+        slideshow.el.appendChild(navContainer);
+        $('ul.navIndex').css("display","none");
+
+// PREV - BUTTON
+        if (prevButton.length === 0 && (slideshow.slides !== undefined || slideshow.hasPrev === true)) {
+          prevButton = document.createElement('button');
+          prevButton.innerHTML = slideshow.options.prevButtonText;
+          prevButton.className = 'prev';
+          slideshow.$el.find('.navigation').append(prevButton);
+          if (slideshow.currentSlideIndex === 0 || slideshow.slides.length < 1) {
+            prevButton.classList.add('inactive');
+          }
+          $(prevButton).on('click', function(e) {
+            e.stopImmediatePropagation();
+            if (slideshow.$el.find(':animated').length < 1) {
+            //  if (slideshow.options.isCarousel !== true) {
+                if (!prevButton.classList.contains('inactive') || ! $(prevButton).hasClass('inactive')) {
+                  slideshow.showSlide(slideshow.currentSlideIndex, 'prev');
+                  nextButton.classList.remove('inactive');
+                }
+                if ((slideshow.currentSlideIndex === 0 && !prevButton.classList.contains('inactive')) || $(prevButton).hasClass('inactive')) {
+                  prevButton.classList.add('inactive');
+                }
+                if (slideshow.options.stopOnNavigation === true) {
+                  if (!$(slideshow.playButton).hasClass('play')) {
+                    $(slideshow.playButton).trigger('click');
+                  }
+                }
+            //  } else {
+           //    slideshow.spin('prev');
+            //  }
+            }
+          });
+          slideshow.navigation = $(navContainer);
+        }
+// NEXT - BUTTON
+        if (nextButton.length === 0) {
+          nextButton = document.createElement('button');
+          nextButton.innerHTML = slideshow.options.nextButtonText;
+          nextButton.className = 'next';
+          if (slideshow.slides.length < 1) {
+            nextButton.classList.add('inactive');
+          }
+          slideshow.$el.find('.navigation').append(nextButton);
+          $(nextButton).on('click', function(e) {
+            e.stopImmediatePropagation();
+            if (slideshow.$el.find(':animated').length < 1) {
+          //    if (slideshow.options.isCarousel === true) {
+            //    slideshow.spin('next');
+             // } else {
+                if (!nextButton.classList.contains('inactive')) {
+                  slideshow.showSlide(slideshow.currentSlideIndex, 'next');
+                  prevButton.classList.remove('inactive');
+                }
+                if (slideshow.currentSlideIndex === slideshow.slides.length - 1 && !nextButton.classList.contains('inactive')) {
+                  nextButton.classList.add('inactive');
+                }
+                if (slideshow.options.stopOnNavigation === true) {
+                  if (!$(slideshow.playButton).hasClass('play')) {
+                    $(slideshow.playButton).trigger('click');
+                  }
+                }
+             // }
+            }
+          });
+        }
+        slideshow.nextButton = $(nextButton);
+        slideshow.prevButton = $(prevButton);
+      };
+//###########################
+//BUILD-PAGINATION
+//###########################   
+      slideshow._buildPagination = function() {
+        var paginationContainer, i, listItem, pageButton;
+        if (slideshow.slides.length > 1) {
+          paginationContainer = document.createElement('div');
+          paginationContainer.classList.add('pagination');
+          slideshow.el.appendChild(paginationContainer);
+          paginationContainer.appendChild(document.createElement('ul'));
+          for ( i = 0; i < slideshow.slides.length; i++) {
+            listItem = document.createElement('li');
+            pageButton = document.createElement('button');
+            pageButton.innerHTML = i + 1;
+            listItem.appendChild(pageButton);
+            paginationContainer.firstChild.appendChild(listItem);
+            $(pageButton).data('rel-slide', i);
+            $(pageButton).on('click', function(e) {
+              var buttons;
+              e.stopImmediatePropagation();
+              if ($(this).data('rel-slide') > slideshow.currentSlideIndex) {
+                slideshow.showSlide($(this).data('rel-slide') - 1, 'next');
+                if (slideshow.prevButton.hasClass('inactive')) {
+                  slideshow.prevButton.removeClass('inactive');
+                }
+                if ($(this).data('rel-slide') === slideshow.slides.length - 1) {
+                  slideshow.nextButton.addClass('inactive');
+                }
+              } else if ($(this).data('rel-slide') < slideshow.currentSlideIndex) {
+                slideshow.showSlide($(this).data('rel-slide') + 1, 'prev');
+                if (slideshow.nextButton.hasClass('inactive')) {
+                  slideshow.nextButton.removeClass('inactive');
+                }
+                if ($(this).data('rel-slide') === 0) {
+                  slideshow.prevButton.addClass('inactive');
+                }
+              }
+              if (slideshow.options.stopOnNavigation === true) {
+                if (! $(slideshow.playButton).hasClass('play')) {
+                  $(slideshow.playButton).trigger('click');
+                }
+              }
+              for ( i = 0; i < slideshow.buttons.length; i++) {
+                slideshow.buttons.item(i).classList.remove('active');
+              }
+              this.classList.add('active');
+            });
+          }
+          slideshow.buttons = slideshow.el.querySelectorAll('.pagination button');
+          slideshow.buttons[slideshow.currentSlideIndex].classList.add('active');
+        }
+      };
+//###########################
+//START-ROTATION
+//###########################   
+      slideshow.startRotation = function() {
+        slideshow.rotation = setInterval(function() {
+          if (slideshow.currentSlideIndex < slideshow.createdSlides.length - 2) {
+            slideshow.showSlide(slideshow.currentSlideIndex, 'next');
+            slideshow.prevButton.removeClass('inactive');
+            if (slideshow.currentSlideIndex - 2 > 0) {
+              slideshow.createdSlides[slideshow.currentSlideIndex - 2].css('left', $(slideshow.createdSlides[slideshow.currentSlideIndex - 2]).outerWidth());
+            }
+            if (slideshow.createdSlides.length - 2 === slideshow.currentSlideIndex) {
+              slideshow.nextButton.addClass('inactive');
+            }
+          } else {
+            if (slideshow.options.isCarousel !== true) { 
+                 slideshow.showSlide(1, 'prev');
+                 slideshow.prevButton.addClass('inactive');
+                 slideshow.nextButton.removeClass('inactive');
+                  slideshow.createdSlides[slideshow.createdSlides.length - 3].css('left', $(slideshow.createdSlides[slideshow.createdSlides.length - 3]).outerWidth());
+            } else {
+                if (slideshow.currentSlideIndex === slideshow.createdSlides.length - 2) {
+                   slideshow.showSlide(slideshow.currentSlideIndex - (slideshow.createdSlides.length - 1), 'next');
+                   slideshow.prevButton.addClass('inactive');
+                   slideshow.nextButton.removeClass('inactive');
+                   slideshow.createdSlides[slideshow.createdSlides.length - 3].css('left', $(slideshow.createdSlides[slideshow.createdSlides.length - 3]).outerWidth());
+                }        
+                       
+            };
+          }
+        }, slideshow.options.autoSpeed);
+        slideshow.rotationStarted = true;
+      };
+
+      slideshow.stopRotation = function() {
+        clearInterval(slideshow.rotation);
+        slideshow.rotationStarted = false;
+      };
+//###########################
+//INITIALIZE-POSITION
+//###########################  
+      slideshow._initializePositions = function() {
+        slideshow.createdSlides.each(function(index) {
+          $(this).css('left', $(this).outerWidth() * index);       
+        });
+      };
+//###########################
+//SPIN
+//########################### 
+      slideshow.spin = function(direction) {
+        if (direction === 'next') {
+          if (slideshow.currentSlideIndex + slideshow.options.minimumShown === slideshow.createdSlides.length) {
+           // slideshow.currentSlideIndex = 0;
+            return;
+          } else {
+            slideshow.currentSlideIndex = slideshow.currentSlideIndex + 1;
+          }
+          if (slideshow.prevButton[0].classList.contains('inactive')) {
+            slideshow.prevButton[0].classList.remove('inactive');
+          }
+          slideshow.createdSlides.each(function(index) {
+            $(this).animate({
+              'left' : $(this).outerWidth() * (index - slideshow.currentSlideIndex)
+              }, slideshow.options.slideSpeed + 200);
+           });
+        } else {
+          // DIRECTION PREV
+          if (slideshow.currentSlideIndex === 0) {
+            //slideshow.currentSlideIndex = slideshow.createdSlides.length - 1;
+             return;
+          } else {
+          slideshow.currentSlideIndex = slideshow.currentSlideIndex - 1
+          }
+          slideshow.createdSlides.each(function(index) {
+            $(this).animate({
+              'left' : $(this).outerWidth() * (index - slideshow.currentSlideIndex)
+            }, slideshow.options.slideSpeed + 200);
+          });
+        }
+      };
+//###########################
+//INIT
+//###########################  
+      slideshow.init = function() {
+        slideshow.options = $.extend({}, $.materna.Slideshow.defaultOptions, options);
+        //checking for outdated browsers
+        if ("classList" in document.createElement("a")) {
+          slideTemplate = slideshow.$el.find(slideshow.options.containerElement);
+          if (slideshow.$el.find(slideshow.options.containerElement).length > 0) {
+            if (slideshow.options.isCarousel === true) {
+              var containerHeight = 0;
+               slideshow.createdSlides[0] = slideshow.$el.find(slideshow.options.containerElement);
+             // $.each(slideshow.createdSlides,function(index, val){      
+                containerHeight = slideshow.options.containerHeight;
+ /*
+                if($(val).outerHeight() !== 0 && $(val).outerHeight() > containerHeight){
+                  containerHeight = $(val).outerHeight();
+                } else if ($(val).children().first().outerHeight() > containerHeight){
+                  containerHeight = $(val).children().first().outerHeight();
+                }             
+              });
+*/           
+              slideshow.$el.css('height',containerHeight);
+              //slideshow.slides = slideshow.createdSlides;
+            } else {
+              slideshow.createdSlides[0] = slideshow.$el.find(slideshow.options.containerElement);
+              slideshow.$el.css('height',slideshow.createdSlides[0].outerHeight());
+            }
+          }
+          if (slideshow.options.preload === true) {
+            slideshow._preloadSlides();
+          } else {
+            slideshow._buildNavigation();
+            if (slideshow.options.pagination === true && slideshow.options.isCarousel !== true) {
+              slideshow._buildPagination();
+            }
+          }
+      //    if (slideshow.options.isCarousel === true) {
+        //    slideshow._initializePositions();
+          //}
+          if (slideshow.options.autoplay === true) {
+            slideshow.startRotation();
+            if (slideshow.options.pauseOnHover === true) {
+              slideshow.$el.on('mouseenter mouseleave', function(e) {
+                if (e.type === 'mouseenter') {
+                  slideshow.stopRotation();
+                } else {
+                  slideshow.startRotation();
+                }
+              });
+            }
+            // when rotation is set play/pause button is NOT optional...
+            var playButton = document.createElement('button'), clickCount = 0;
+            playButton.innerHTML = '||';
+            playButton.className = 'pause';
+            $(playButton).click(function(e) {
+              e.stopImmediatePropagation();
+              if (clickCount % 2 === 0) {
+                playButton.innerHTML = '>>';
+                slideshow.stopRotation();
+              } else {
+                playButton.innerHTML = '||';
+                slideshow.startRotation();
+              }
+              playButton.classList.toggle('play');
+              clickCount++;
+            });
+            if (slideshow.navigation === undefined) {
+              setTimeout(function() {
+                $(playButton).appendTo(slideshow.navigation);
+              }, 1000);
+            } else {
+              $(playButton).appendTo(slideshow.navigation);
+            }
+            slideshow.playButton = $(playButton);
+          }
+          slideshow.currentSlideIndex = slideshow.options.startPos;
+        } else {
+          if (!window.console) console = {log: function() {}};
+          console.log('update your browser!');
+          return;
+        }
+      };
+      // Run initializer
+      slideshow.init();
+    };
+//###########################
+//DEFAULT-OPTIONS
+//###########################       
+$.materna.Slideshow.defaultOptions = {
+      // Initial
+      jsonUrl : 'json/slides.json', // URL to json containing slides
+      preload : true, // whether to preload or not
+      isCarousel : true,
+      minimumShown : 6, // more than one slide visible or not
+      startPos : 0, // position to start with
+      // Structural
+      containerElement : '.slide', //element that contains a slide
+      nextButton : '.next', // button for next slide
+      nextButtonText: '>',
+      prevButton : '.prev', //button for previous slide
+      prevButtonText: '<',
+      pagination : false, //whether to generate pagination
+      slideshowControls : true, //whether there should be buttons for "start" and "stop"
+      // Animation and auto play
+      autoplay : true, //whether the slideshow should start automatically
+      autoSpeed : 2000, //length of the pause between slides in an autoslide
+      pauseOnHover : true, //pause the slideshow on hovering?
+      stopOnNavigation : true, //stop the slideshow on using pagination or prev/next buttons
+      slideSpeed : 500, //speed of the sliding animation
+      cycle : true, //whether the slideshow should wrap around
+      autoHeight : true, //whether $el should adapt to larger or smaller slides
+      containerHeight : 200,
+      cantouchthis : false
+    };
+    $.fn.materna_Slideshow = function(options) {
+      return this.each(function() {
+        $.materna.Slideshow(this, options);
+      });
+    };
+  }(jQuery));

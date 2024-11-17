@@ -1,0 +1,7 @@
+#BlueJ class context
+comment0.target=Pfeil
+comment1.params=
+comment1.target=Pfeil()
+comment2.params=achse
+comment2.target=Pfeil(java.lang.String)
+numComments=3

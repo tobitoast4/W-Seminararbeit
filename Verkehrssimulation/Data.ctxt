@@ -1,0 +1,27 @@
+#BlueJ class context
+comment0.target=Data
+comment1.params=
+comment1.target=Data()
+comment10.params=i
+comment10.target=void\ setAutoNr(int)
+comment11.params=
+comment11.target=int\ getAutoNr()
+comment12.params=f
+comment12.target=void\ addFlowValue(int)
+comment2.params=x
+comment2.target=void\ setXWert2(int)
+comment3.params=
+comment3.target=int\ getXWert2()
+comment4.params=x
+comment4.target=void\ setXWert(int)
+comment5.params=
+comment5.target=int\ getXWert()
+comment6.params=r
+comment6.target=void\ setRunde(int)
+comment7.params=
+comment7.target=int\ getRunde()
+comment8.params=i
+comment8.target=void\ setAutosAnz(int)
+comment9.params=
+comment9.target=int\ getAutosAnz()
+numComments=13

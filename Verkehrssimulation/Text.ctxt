@@ -1,0 +1,13 @@
+#BlueJ class context
+comment0.target=Text
+comment1.params=i
+comment1.target=Text(int)
+comment2.params=t\ size
+comment2.target=Text(java.lang.String,\ int)
+comment3.params=t\ size\ breite
+comment3.target=Text(java.lang.String,\ int,\ int)
+comment4.params=t
+comment4.target=Text(java.lang.String)
+comment5.params=t
+comment5.target=void\ setText(java.lang.String)
+numComments=6

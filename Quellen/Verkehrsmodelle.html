@@ -1,0 +1,166 @@
+
+<!-- saved from url=(0051)http://www.thp.uni-koeln.de/~as/Mypage/verkehr.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+   <title>Verkehrsmodelle</title>
+ </head>
+
+<body bgcolor="#FFFFFF" text="#000000" link="#0000C0" vlink="#0000C0" alink="#0000C0">
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%"><tbody><tr>
+<td><img src="./Verkehrsmodelle_files/kreis_l.gif"> <font size="5"><b>Verkehrsmodelle</b>
+</font></td><td align="right">[<a href="http://www.thp.uni-koeln.de/~as/Mypage/traffic.html">english version</a>]
+</td></tr></tbody></table>
+<br>
+
+Stochastische Modelle haben viele interdisziplinäre Anwendungen. Ein Beispiel ist die Beschreibung von Strassenverkehr mit Hilfe
+von Zellularautomaten [1,2]. 
+<p>
+Zellularautomaten sind Modelle, die diskret in der Zeit, im Raum
+und in der Zustandsvariablen sind. Letzteres unterscheidet sie
+z.B. von diskretisierten Differentialgleichungen. Auf Grund der
+Diskretheit erlauben Zellularautomaten eine äusserst effiziente
+Implementierung für Computersimulationen.
+</p><p>
+Zur Beschreibung des Zustandes einer Strasse mit Hilfe eines
+Zellularautomaten unterteilt man diese zunächst in Zellen der
+Länge 7.5 m. Dies entspricht dem Platzbedarf (Fahrzeuglänge +
+Abstand zum Vordermann) eines Autos in einem dichten Stau.
+Jede Zelle kann nun leer oder durch genau ein Auto besetzt sein.
+Die Fahrzeuge werden durch ihre momentane Geschwindigkeit v
+charakterisiert, die die Werte <i>v</i>=0,1,2,... ,<i>v</i><sub>max</sub>
+annehmen kann. <i>v</i><sub>max</sub> entspricht dabei z.B. einer
+Geschwindigkeitsbeschränkung und ist deshalb im einfachsten Falle
+für alle Fahrzeuge gleich. Eine typische Konfiguration zeigt die folgende Abbildung.
+</p><p>
+</p><center>
+<img src="./Verkehrsmodelle_files/konfig.gif" alt="Typische Konfiguration">
+</center>
+<p>
+Als Nächstes benötigt man Regeln, die die zeitliche Entwicklung 
+eines gegebenen Zustandes definieren. Der einfachste Regelsatz,
+der zu einem realistischen Verhalten führt, wurde 1992 von
+Nagel und Schreckenberg [3] angegeben. Er besteht aus
+4 Schritten, die jeweils auf alle Fahrzeuge gleichzeitig anzuwenden
+sind (parallele Dynamik).
+</p><p>
+<table width="100%" cellspacing="0" cellpadding="10" border="0">
+<tbody><tr>
+<td>
+<table cellpadding="5" cellspacing="5">
+ <tbody><tr><td bgcolor="#dddddd">
+  <b>Schritt 1: Beschleunigung</b><br>
+  Alle Fahrzeuge, die noch nicht die Maximalgeschwindigkeit <i>v</i><sub>max</sub> erreicht haben, beschleunigen um eine Einheit: <i>v</i> -&gt; <i>v</i>+1
+ </td></tr><tr><td bgcolor="#dddddd">
+<b>Schritt 2: Sicherheitsabstand</b><br>
+Sieht ein Fahrzeug <i>d</i> freie Zellen vor sich und ist seine
+Geschwindigkeit <i>v</i> (nach Schritt 1) grösser als <i>d</i>, so
+wird die Geschwindigkeit auf <i>d</i> reduziert: <i>v</i> -&gt; min{<i>d</i>,<i>v</i>}
+ </td></tr><tr><td bgcolor="#dddddd">
+<b>Schritt 3: Trödeln</b><br>
+Die Geschwindigkeit wird zufällig mit der Wahrscheinlichkeit <i>p</i>
+um eine Einheit vermindert (wenn nach Schritt 2 <i>v</i>&gt;0 war): <i>v</i> -&gt; <i>v</i>-1
+ </td></tr><tr><td bgcolor="#dddddd">
+<b>Schritt 4: Fahren</b><br>
+Nachdem in den Schritten 1-3 die neue Geschwindigkeit <i>v<sub>n</sub></i> für jedes Fahrzeug <i>n</i> bestimmt wurde, bewegt sich dieses nun um <i>v<sub>n</sub></i> Zellen vorwärts: <i>x<sub>n</sub></i> -&gt; <i>x<sub>n</sub></i>+<i>v<sub>n</sub></i>.
+</td></tr></tbody></table>
+<p>
+Die rechtseitige Abbildung zeigt an einem Beispiel, wie sich die Konfiguration
+zur Zeit <i>t</i>+1 durch schrittweises Anwenden der Regeln aus der Konfiguration zur Zeit <i>t</i> ergibt.
+</p></td><td>
+<p>
+</p><center>
+<img src="./Verkehrsmodelle_files/update.gif" alt="Update">
+</center>
+<p>
+
+</p></td></tr></tbody></table>
+Was bedeuten diese Regeln? Schritt 1 beschreibt z.B. den Wunsch der
+Fahrer, so schnell wie möglich bzw. erlaubt zu fahren. Schritt 2
+beinhaltet die Wechselwirkung zwischen den Fahrzeugen und dient der
+Vermeidung von Unfällen. Schritt 3 erfasst auf ganz einfache
+Art und Weise eine ganze Reihe von Effekten, die im realen Verkehr
+eine wichtige Rolle spielen. So wird ein einzelnes Fahrzeug niemals
+konstant mit exakt der gleichen Geschwindigkeit fahren, sondern
+die Reisegeschwindigkeit wird leicht fluktuieren. Ein ganz wichtiger
+Punkt sind die überreaktionen beim Bremsen. Ein Fahrzeug, das z.B.
+in Schritt 2 etwas abbremsen musste, wird mit der Wahrscheinlichkeit
+<i>p</i> noch weiter abbremsen, als es eigentlich nötig wäre. Dies kann
+zu einer Kettenreaktion führen, wenn die Fahrzeugdichte gross
+genung ist. Schliesslich kommt ein Fahrzeug zum Stehen und löst
+einen Stau aus. Dieser ist ohne offensichtlichen äusseren
+Anlass entstanden und wird deshalb als ``Stau aus dem Nichts''
+oder spontaner Stau bezeichnet. Hier zeigt sich ganz deutlich die
+wichtige Bedeutung von Schritt 3, der das nicht perfekte Verhalten
+der Autofahrer widerspiegelt. In Schritt 4 werden schliesslich
+die Fahrzeuge gemäss ihrer neuen Geschwindigkeit weiterbewegt.
+</p><p>
+Der obige Regelsatz ist minimal in dem Sinne, dass man bei Weglassen einer der Regeln kein realistisches Verhalten mehr findet. Unter realistischem Verhalten verstehen wir hier das Auftreten spontaner Staus und die richtige Form des sogenannten Fundamentaldiagramms, d.h. des Zusammenhangs zwischen Dichte und Fahrzeugstrom. Für kleine Dichten ist der Strom proportional zur Dichte, da die Autos fast nicht miteinander wechselwirken und somit mit ihrer Wunschgeschwindigkeit <i>v</i><sub>max</sub> (bis auf Fluktuationen durch den Trödelschritt) fahren. Bei höheren Dichten wird die Wechselwirkung wichtig und man findet Abweichungen vom linearen Verhalten. Schliesslich dominiert die Wechselwirkung sogar und der Strom nimmt mit steigender Dichte wieder ab.
+</p><p>
+Die Dynamik lässt sich sehr gut mit Hilfe eines <a href="http://www.thp.uni-koeln.de/~as/Mypage/simulation.html">Java-Applets</a> verfolgen. Links unten sieht man die Darstellung der Fahrzeugpositionen auf dem Ring (periodische Randbedingungen, die Autos fahren
+``im Kreis''). Das Fenster darüber zeigt die Trajektorien
+der einzelnen Fahrzeuge. Der linke Rand (blaue Linie) entspricht
+dabei dem blauen Strich (bei 3 Uhr) in der Darstellung links unten.
+Die Fahrzeuggeschwindigkeiten werden durch unterschiedliche
+Farben gekennzeichnet. Die augenblickliche Geschwindigkeitsverteilung
+wird unten in der Mitte dargestellt. Daneben findet man die
+momentane Verteilung der Abstände zum Vordermann (gaps).
+Die drei Diagramme rechts neben der Darstellung der Fahrzeugtrajektorien
+sind verschiedene Formen des Fundamentaldiagramms. Im obersten Diagramm
+wird der Strom als Funktion der Dichte dargestellt. Dies ist die
+klassische Form des Fundamentaldiagramms. Darunter findet man die
+Durchschnittsgeschwindigkeit als Funktion der Dichte bzw. als
+Funktion des Stromes. Alle drei Darstellungen sind aber äquivalent,
+da die drei Grössen Dichte <i>r</i>, Strom <i>J</i> und
+Durchschnittsgeschwindigkeit <i>v</i> nicht unabhängig voneinander sind,
+sondern über <i>J</i>=<i>r</i> <i>v</i> zusammenhängen. Es sei hier bemerkt, dass die Messgrössen, die in den Fundamentaldiagrammen dargestellt werden, lokal gemessen werden, d.h. es wird jeweils nur über einen Teilbereich des Ringes gemittelt. Deshalb ist es möglich, dass die (lokale) Dichte verschiedene Werte annehmen kann, obwohl die Gesamtzahl der Fahrzeuge (und damit die globale Dichte) festgehalten wird.
+</p><p>
+In der Simulation erkennt man deutlich die auftretenden spontanen Staus (rot). Man sieht auch das typische stop-and-go Verhalten, bei dem man kurz nach dem Verlassen eines Staus bereits in den nächsten gerät. Wenn man die globale Dichte mit Hilfe des Schiebereglers ``global density'' verändert, sieht man deutlich, wie sich die Zahl der auftretenden Staus ändert. Interessant ist es auch, den Trödelparameter <i>p</i> über ``Slowdown prob. p'' bei fester Dichte zu verändern. Man beachte insbesondere, das man für <i>p</i>=0 ein ganz anderes Verhalten erhält.
+</p><p>
+Mit dem Applet lässt sich auch eine interessante Variante des Nagel-Schreckenberg Modells simulieren. Dazu klicke man auf den Button ``NaSch'' über den Trajektorien und wähle ``VDR'' aus. VDR ist die Abkürzung von ``velocity-dependent randomization'' und bezeichnet den entscheidenden Unterschied zum NaSch Modell. In letzterem ist der Trödelparameter <i>p</i> konstant. Im VDR-Modell [4] hingegen, hängt <i>p</i> von der Geschwindigkeit des Fahrzeuges nach dem letzten Zeitschritt ab. Für stehende Fahrzeuge wählt man für den Trödelparameter einen höheren Wert <i>p</i><sub>2</sub> als den Wert <i>p</i> für fahrende Fahrzeuge. Das VDR-Modell unterscheidet sich daher vom NaSch-Modell nur durch den neuen
+<table cellpadding="5">
+ <tbody><tr><td bgcolor="#dddddd">
+Schritt 0: <b>Bestimmung des Trödelparameters <i>p</i>(<i>v</i>)</b><br>
+Für stehende Fahrzeuge (<i>v</i>=0) ist <i>p</i>(<i>v</i>=0)=<i>p</i><sub>2</sub>. Für fahrende Fahrzeuge (<i>v</i>&gt;0) ist <i>p</i>(<i>v</i>)=<i>p</i>,
+</td></tr></tbody></table>
+
+der vor den anderen Schritten auszführen ist. Alle anderen Schritte bleiben unverändert. <i>p</i><sub>2</sub> lässt sich über den Regler ``Slowdown prob. of stopped cars p2'' steuern.
+</p><p>
+Um den Unterschied im Verhalten von NaSch-Modell und VDR-Modell deutlich zu sehen, wähle man ein relativ kleines <i>p</i>, z.B. <i>p=0.01</i> und ein relativ grosses <i>p</i><sub>2</sub>, z.B. <i>p</i><sub>2</sub>=0.5. Man sieht deutlich, dass sich (für nicht zu kleine Dichten) nach einiger Zeit ein phasenseparierter Zustand herausbildet, der aus einem grossen kompakten Stau und einem staufreien Freiflussbereich besteht.
+
+<br><br><br>
+</p><p>
+<b>Literatur:</b><br><br>
+<table border="0" nosave="">
+<tbody><tr nosave="">
+<td valign="TOP" width="10" nosave="">[1]</td>
+<td nosave="">D. Chowdhury, L. Santen and A. Schadschneider: <i>Statistical physics of vehicular traffic and some related systems </i>, Physics Reports 329, 199 (2000)</td>
+</tr>
+<tr nosave="">
+
+</tr><tr nosave="">
+<td valign="TOP" width="10" nosave="">[2]</td>
+<td nosave="">S. Wolfram, <i>Theory and Applications of Cellular Automata</i>, (World Scientific, 1986)</td>
+</tr>
+<tr nosave="">
+
+</tr><tr nosave="">
+<td valign="TOP" width="10" nosave="">[3]</td>
+<td nosave="">K. Nagel and M. Schreckenberg, <i>A cellular automaton model for freeway traffic</i>, J. Physique I <b>2</b>, 2221 (1992)</td>
+</tr>
+<tr nosave="">
+
+</tr><tr nosave="">
+<td valign="TOP" width="10" nosave="">[4]</td>
+<td nosave="">R. Barlovic, L. Santen, A. Schadschneider and M. Schreckenberg, <i>Metastable states in cellular automata for traffic flow</i>, Eur. Phys. J. B <b>5</b>, 793 (1998)</td>
+</tr>
+<tr nosave="">
+
+</tr></tbody></table>
+</p><p>
+</p><address><i>Andreas Schadschneider</i> <br><i>2000-04-10</i> 
+</address>
+
+
+
+
+</body></html>

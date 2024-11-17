@@ -1,0 +1,238 @@
+var calendar_link = "SiteGlobals/Functions/Kalender/DE/Kalender.html?nn=456892";
+var search_link = "SiteGlobals/Forms/Suche/Autosuggest_Formular.html?nn=456892";
+var lightboxNutzerumfrage = "DE/Statistik/_Umfragen/Nutzerbefragung/Lightbox/LightboxConfiguration.html?view=renderLightboxConfiguration";
+var addAutosuggest = false;
+var path = "/KBA/SiteGlobals/Functions/JavaScript/Init";
+path = path.substr(path.indexOf("/")+1,path.lastIndexOf("/"));
+path = path.substr(path.indexOf("/"),path.lastIndexOf("/"));
+/*
+var reqScript = document.getElementsByTagName("script"), version;
+for(var i=0; i < reqScript.length; i++){
+  if(reqScript[i].getAttribute('data-main') !== null && reqScript[i].getAttribute('data-main') !== ""){
+    var initLink =  reqScript[i].getAttribute('data-main');
+    var initLink2 = initLink.substr(0,initLink.lastIndexOf("?")+1);
+    version = initLink.substr(initLink.lastIndexOf("v"),initLink.length);
+    version = version.replace("=","");
+    initLink=initLink2+version;
+   reqScript[i].setAttribute('data-main',"/"+initLink);
+  }
+}
+*/
+require({
+ baseUrl : path
+}, ["jquery", "Addon_FlyoutMenu", "JQuery_UI_Widget", "JQuery_PlugIn_Cookie",  "Addon_Printlink", "Addon_Clearfields","JQuery_DataTables","Addon_JQuery_Modal","slideshow_neu","JQuery_RadioToSlider"], function($) {
+ jQuery(function() {
+  $('body').addClass('js-on');
+  $('body').removeClass('js-off');
+  $('#navPrimary').materna_init_FlyoutMenu();
+  $('#navFunctions').materna_init_printlink();
+  $(document).materna_init_Clearfields();
+   if($('#content .modal').length>0)
+   {
+      resizeModal();
+      $(window).resize(function(){
+       resizeModal();
+      });
+   }
+  if(document.body.offsetWidth < 481) {
+   require(["jquery", "Addon_Handheld"], function($){
+    jQuery(document).materna_init_handheld();
+   });
+  }
+//DataTables
+$("#datatables_statistik_table").DataTable( {
+  "ordering": false,
+  "searching": false,
+  "stateSave": true,
+  "dom": '<lf<"tableWrapper"t>ip>',
+  "stripeClasses": [],
+  "lengthMenu": [ [50, 100, -1], [50, 100, "Alle"] ],
+  language: {
+        url: '/SiteGlobals/Functions/JavaScript/JQuery_DataTables_i18n_German'
+    }
+});
+//Statistik-Formular
+$('#linkCSVExport').click(function(ev){
+   ev.preventDefault();
+   $('input[name=csv_export]').trigger("click");
+});
+// Stage nicht  definiert?
+// Warum auch immer, im IE knallt es dann, daher:
+if (typeof stage == "undefined") {
+stage = "";
+}
+stage = stage.replace(/\/KBA/g,  "");
+/*
+$('#slideshow').text ("Hallo:" +stage);
+*/
+$('#slideshow').materna_Slideshow({
+jsonUrl:stage+'?view=renderJSON',
+pagination: true,
+autoplay: true,
+autoSpeed : 10000,
+pauseOnHover: false,
+nextButtonText:'>',
+prevButtonText:'<',
+interval: 5000,
+clickable: false
+});
+  if($('a.lupe').length){
+    require(["jquery", "JQuery_PlugIn_Lightbox","JQuery_PlugIn_a11y"], function($){
+    if ($('.photogalleryDocuments a').length) {
+        $('a.lupe, .photogalleryDocuments a').lightBox();
+    } else {
+        $('a.lupe').each(function(){
+          $(this).lightBox({'hasNavigation': 'false'});
+       });
+    }
+   });
+  }
+  if($("input[name=templateQueryString]").length) {
+   require(["jquery", "Addon_Autosuggest"], function(domReady, $){
+    jQuery(document).ready(function(){
+       jQuery.materna_init_autosuggest();
+    });
+   });
+  }
+  if($("div.calendar").length) {
+   require(["jquery", "Addon_Calendar"], function($) {
+    jQuery("div.calendar").materna_Calendar();
+   });
+  }
+  if($('.GlossarEntry').length){
+   require(["jquery", "Addon_GlossarPopup"], function($) {
+     $ .init_glossarylink();
+   });
+  }
+  if($('#sitemap').length > 0) {
+   require(["jquery", "Addon_Accordion"], function($) {
+       var sections = $('#sitemap h2').siblings('ul').children('li').children('ul'),
+            ctrls = sections.siblings('a').before('<button class="tree-button"><span class="aural">+</span></button>').siblings('button');
+       $('#sitemap').materna_Accordion({ tree: false, openFirst: false,
+          controls: ctrls,
+          panels: sections
+       });
+   });
+  }
+  if($('#glossaryHits').length > 0){
+     require(["jquery", "Addon_Accordion"], function($) {
+       var sections = $('#glossaryHits').children('li'),
+            ctrls = sections.children('h4').prepend('<button class="tree-button"><span class="aural">+</span></button>').siblings('button');
+         $('#glossaryHits').materna_Accordion({ controls: 'h4', panels: '.glossarEntry' });
+     });
+  }
+  if($('.faq').length > 0){
+    require(["jquery", "Addon_Accordion"], function($) {
+      $("#navContent").hide();
+      $('.faq').children('dt').children('a').before('<button class="tree-button"><span class="aural">+</span></button>').siblings('button');
+      $('.faq').materna_Accordion({ controls: $('.faq dt'), panels: $('.faq dd') });
+    });
+  }
+  if($('.singleview .accordionstart').length > 0){
+   var sections = $('.singleview').children('.accordioncontent')
+      ctrls = $('.singleview').children('.accordionstart').before('<button class="tree-button"><span class="aural">+</span></button>').siblings('button');
+    if($('.singleview').hasClass('statistikform')) {
+       require(["jquery", "Addon_Accordion"], function($) {
+        $('.singleview').has('.accordionstart').materna_Accordion({ controls: ctrls, panels: sections, openFirst: true });
+      });
+    } else {
+      require(["jquery", "Addon_Accordion"], function($) {
+        $('.singleview').has('.accordionstart').materna_Accordion({ controls: ctrls, panels: sections });
+      });
+    };
+  }
+  if($('.textFragment').length > 0){
+     require(["jquery", "Addon_Accordion"], function($) {
+        $('.textFragment').children('.textFragmentTitle').children('h2').prepend('<button class="tree-button"><span class="aural">+</span></button>').siblings('button');
+        $('.textFragment').materna_Accordion({
+           controls: '.textFragmentTitle',
+           panels: '.textFragmentBody'
+        });
+     });
+  }
+  if($('.imageSlider').length > 0) {
+     require(["jquery", "Addon_Slideshow"], function(){
+            var tcount = $('.imageSlider').width() / Math.max.apply(Math, $ .map($('.imageSlider .teaser'), function(el){return $(el).width()}));
+            tcount = tcount > 0 ? tcount : 1;
+            $('.imageSlider .rack-design').materna_Slideshow({
+               autoplay: false, nVisible: tcount, slideshowControls: false, cycle: false, padding: 0, navigation: true,
+               selectElement: '.teaser'
+            });
+     });
+  }
+  if($('.gallery').length > 0) {
+     require(["jquery", "Addon_Slideshow", "Addon_Gallery"], function(){
+            $('.gallery').materna_Gallery({slider: '.rack-design', display: '.gallery-stage', slideshowOptions: {
+               autoplay: false, nVisible: 3, slideshowControls: false, cycle: false, padding: 0, navigation: true,
+               selectElement: '.teaser'
+            }});
+     });
+  }
+  if($('.fragebogen .schieberegler .formField').length > 0) {
+    $(".fragebogen .schieberegler .formField").radiosToSlider();
+  }
+  if($('#tabbedDocuments').length > 0) {
+     require(["jquery", "Addon_Tabs"], function(){
+            $('#tabbedDocuments').materna_Tabs();
+            $('#tabbedDocuments ol li.tabElement a').click(function(ev){ev.preventDefault();});
+            var anzahlTab = $('#tabNav li').length;
+            //console.log(anzahlTab);
+            var minWidth = 100 / anzahlTab -2;
+            var minWidth = minWidth + "%";
+            $('#tabNav li.tabElement').css('min-width', minWidth);
+     });
+  }
+  if($('#content .modal.loadOnPageReady').length > 0) {
+    jQuery.ajax({
+        url: lightboxNutzerumfrage
+    }).done(function( data ) {
+      var surveyname = $('#content .modal.loadOnPageReady').attr("data-surveyname");
+      console.log("surveyname: " + surveyname);
+      var bShowLighbox = data.renderLightbox;
+      if( surveyname !== undefined ) {
+        var kbaCookie = jQuery.cookie("kba_dontShowLightbox_"+surveyname);
+        console.log("kbaCookie:" + kbaCookie )
+        if( kbaCookie !== undefined ) {
+          console.log("Cookie vorhanden, Lightbox wird nicht dargestellt");
+          bShowLighbox = false;
+        }
+      }
+      console.log("Lightbox darstellen: " + bShowLighbox);
+      if(bShowLighbox) {
+        $('#content .modal.loadOnPageReady').modal();
+      }
+    });
+  }
+  if($('#setHiddenCookie').length > 0 ) {
+    var surveyname = $('#setHiddenCookie').attr("data-surveyname");
+    console.log("surveyName: " + surveyname);
+    if( surveyname !== undefined ) {
+      jQuery.cookie("kba_dontShowLightbox_" + surveyname, 1, {expires : 28, path: '/'});
+      console.log("cookie gesetzt: " + jQuery.cookie("kba_dontShowLightbox_"+ surveyname));
+    }
+  }
+  $(function() {
+      if (window.PIE) {
+          //Navigation und Servicesuche
+          $('#navPrimary li #n-1 h3,#navPrimary li .mod h3,#navSecondary .navMain ul,#search').each(function() {
+              PIE.attach(this);
+          });
+          //Content und Supplement
+          $('#wrapperDivisions .boxWrapper,#wrapperDivisions .boxWrapper h3,#content .teaser,#supplement .calendar').each(function() {
+              PIE.attach(this);
+          });
+          //Footer
+          $('#wrapperFooter').each(function() {
+              PIE.attach(this);
+          });
+      }
+  });
+ });
+});
+function resizeModal(){
+      var windowHeight = $(window).height();
+      var modalHeight = windowHeight / 2;
+      $('#content .modal').css('max-height',modalHeight+'px');
+      $('#content .modal').css('overflow','auto');
+      jQuery.modal.resize();
+}

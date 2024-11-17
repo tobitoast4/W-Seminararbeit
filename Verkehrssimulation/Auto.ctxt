@@ -1,0 +1,25 @@
+#BlueJ class context
+comment0.target=Auto
+comment1.params=vM\ pNew
+comment1.target=Auto(int,\ int)
+comment10.params=n
+comment10.target=void\ setVMax(int)
+comment11.params=
+comment11.target=boolean\ checkDoubles()
+comment2.params=
+comment2.target=Auto()
+comment3.params=i
+comment3.target=Auto(int)
+comment4.params=vM\ pNew\ v_n
+comment4.target=Auto(int,\ int,\ int)
+comment5.params=
+comment5.target=void\ setColor()
+comment6.params=
+comment6.target=void\ setColorPxl()
+comment7.params=
+comment7.target=int\ getSpeed()
+comment8.params=j
+comment8.target=void\ setSpeed(int)
+comment9.params=
+comment9.target=void\ test()
+numComments=12
